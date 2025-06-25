@@ -11,11 +11,14 @@ import org.example.expert.domain.todo.entity.Todo;
 import org.example.expert.domain.todo.repository.TodoRepository;
 import org.example.expert.domain.user.dto.response.UserResponse;
 import org.example.expert.domain.user.entity.User;
+import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
@@ -49,10 +52,33 @@ public class TodoService {
         );
     }
 
-    public Page<TodoResponse> getTodos(int page, int size) {
+    public Page<TodoResponse> getTodos(int page, int size, String weather, LocalDate startDate, LocalDate endDate){
         Pageable pageable = PageRequest.of(page - 1, size);
 
-        Page<Todo> todos = todoRepository.findAllByOrderByModifiedAtDesc(pageable);
+        Page<Todo> todos;
+
+        boolean hasWeather = weather != null && !weather.isBlank();
+        boolean hasStart = startDate != null;
+        boolean hasEnd = endDate != null;
+
+        if (hasWeather && hasStart && hasEnd) {
+            todos = todoRepository.findByWeatherAndDateRange(weather, startDate, endDate, pageable);
+        } else if (hasWeather && hasStart) {
+            todos = todoRepository.findByWeatherFromStartDate(weather, startDate, pageable);
+        } else if (hasWeather && hasEnd) {
+            todos = todoRepository.findByWeatherUntilEndDate(weather, endDate, pageable);
+        } else if (hasWeather) {
+            todos = todoRepository.findByWeatherContainingOrderByModifiedAtDesc(weather, pageable);
+        } else if (hasStart && hasEnd) {
+            todos = todoRepository.findByDateRange(startDate, endDate, pageable);
+        } else if (hasStart) {
+            todos = todoRepository.findByStartDate(startDate, pageable);
+        } else if (hasEnd) {
+            todos = todoRepository.findByEndDate(endDate, pageable);
+        } else {
+            todos = todoRepository.findAllByOrderByModifiedAtDesc(pageable);
+        }
+
 
         return todos.map(todo -> new TodoResponse(
                 todo.getId(),
