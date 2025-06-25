@@ -1,6 +1,6 @@
 package org.example.expert.domain.todo.controller;
 
-import org.example.expert.domain.common.dto.AuthUser;
+import org.example.expert.domain.common.dto.CustomUserDetails;
 import org.example.expert.domain.common.exception.InvalidRequestException;
 import org.example.expert.domain.todo.dto.response.TodoResponse;
 import org.example.expert.domain.todo.service.TodoService;
@@ -35,8 +35,8 @@ class TodoControllerTest {
         // given
         long todoId = 1L;
         String title = "title";
-        AuthUser authUser = new AuthUser(1L, "email", UserRole.USER,"nickname");
-        User user = User.fromAuthUser(authUser);
+        CustomUserDetails userDetails = new CustomUserDetails(1L, "email", UserRole.USER.toString(),"nickname");
+        User user = User.fromAuthUser(userDetails);
         UserResponse userResponse = new UserResponse(user.getId(), user.getEmail(),user.getNickname());
         TodoResponse response = new TodoResponse(
                 todoId,
