@@ -61,7 +61,6 @@ public class TodoRepositoryQueryImpl implements TodoRepositoryQuery{
             builder.and(todo.createdAt.loe(endDate));
         }
 
-
         // 서브쿼리: 댓글 수
         JPQLQuery<Long> commentCount = JPAExpressions
                 .select(comment.count())
