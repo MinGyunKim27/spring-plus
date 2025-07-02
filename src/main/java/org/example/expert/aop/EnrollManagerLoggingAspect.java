@@ -26,6 +26,7 @@ public class EnrollManagerLoggingAspect {
 
     @Before("execution(* org.example.expert.domain.manager.controller.ManagerController.*(..))")
     public void managerEnroll(JoinPoint joinPoint) {
+
         Object[] args = joinPoint.getArgs();
 
         Long userId = null;

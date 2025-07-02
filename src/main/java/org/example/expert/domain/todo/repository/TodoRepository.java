@@ -22,12 +22,14 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
     @Query("SELECT t FROM Todo t WHERE t.weather LIKE %:weather% ORDER BY t.modifiedAt DESC")
     Page<Todo> findByWeatherContainingOrderByModifiedAtDesc(@Param("weather") String weather,
                                                             Pageable pageable);
+
     //날씨, start , endDate 모두 존재 할 경우
     @Query("SELECT t FROM Todo t WHERE t.weather LIKE %:weather% AND t.modifiedAt BETWEEN :start AND :end ORDER BY t.modifiedAt DESC")
     Page<Todo> findByWeatherAndDateRange(@Param("weather") String weather,
                                          @Param("start") LocalDate start,
                                          @Param("end") LocalDate end,
                                          Pageable pageable);
+
     // start , endDate만 존재 할 경우
     @Query("SELECT t FROM Todo t WHERE t.modifiedAt BETWEEN :start AND :end ORDER BY t.modifiedAt DESC")
     Page<Todo> findByDateRange(@Param("start") LocalDate start,
@@ -45,6 +47,7 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
     @Query("SELECT t FROM Todo t WHERE t.modifiedAt >= :start ORDER BY t.modifiedAt DESC")
     Page<Todo> findByStartDate(@Param("start") LocalDate start, Pageable pageable);
 
+
     //날씨와 startDate만 있을 경우
     @Query("""
     SELECT t FROM Todo t
@@ -55,6 +58,7 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
     Page<Todo> findByWeatherFromStartDate(@Param("weather") String weather,
                                           @Param("startDate") LocalDate startDate,
                                           Pageable pageable);
+
 
     @Query("""
     SELECT t FROM Todo t
@@ -72,4 +76,5 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
             "LEFT JOIN t.user " +
             "WHERE t.id = :todoId")
     Optional<Todo> findByIdWithUser(@Param("todoId") Long todoId);
+
 }

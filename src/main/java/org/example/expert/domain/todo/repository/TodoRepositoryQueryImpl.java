@@ -3,14 +3,13 @@ package org.example.expert.domain.todo.repository;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Projections;
-import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.example.expert.domain.comment.entity.QComment;
 import org.example.expert.domain.manager.entity.QManager;
+import org.example.expert.domain.todo.dto.response.QTodoSearchResponse;
 import org.example.expert.domain.todo.dto.response.TodoSearchResponse;
 import org.example.expert.domain.todo.entity.QTodo;
 import org.example.expert.domain.todo.entity.Todo;
@@ -19,7 +18,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -61,6 +59,8 @@ public class TodoRepositoryQueryImpl implements TodoRepositoryQuery{
             builder.and(todo.createdAt.loe(endDate));
         }
 
+
+
         // 서브쿼리: 댓글 수
         JPQLQuery<Long> commentCount = JPAExpressions
                 .select(comment.count())
@@ -75,11 +75,11 @@ public class TodoRepositoryQueryImpl implements TodoRepositoryQuery{
 
         // 본문 데이터 조회
         List<TodoSearchResponse> content = queryFactory
-                .select(Projections.constructor(
-                        TodoSearchResponse.class,
+                .select(new QTodoSearchResponse(
+                        todo.id,
                         todo.title,
-                        ExpressionUtils.as(managerCount, "managerCount"),
-                        ExpressionUtils.as(commentCount, "commentCount")
+                        managerCount,
+                        commentCount
                 ))
                 .from(todo)
                 .join(todo.user)

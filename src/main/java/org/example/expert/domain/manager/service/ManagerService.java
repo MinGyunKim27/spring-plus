@@ -63,6 +63,9 @@ public class ManagerService {
         List<Manager> managerList = managerRepository.findByTodoIdWithUser(todo.getId());
 
         List<ManagerResponse> dtoList = new ArrayList<>();
+
+        dtoList = managerList.stream().map(t -> new ManagerResponse(t.getId(), new UserResponse(t.getUser().getId(), t.getUser().getEmail(), t.getUser().getNickname()))).toList();
+
         for (Manager manager : managerList) {
             User user = manager.getUser();
             dtoList.add(new ManagerResponse(
