@@ -59,8 +59,6 @@ public class TodoRepositoryQueryImpl implements TodoRepositoryQuery{
             builder.and(todo.createdAt.loe(endDate));
         }
 
-
-
         // 서브쿼리: 댓글 수
         JPQLQuery<Long> commentCount = JPAExpressions
                 .select(comment.count())
@@ -82,7 +80,6 @@ public class TodoRepositoryQueryImpl implements TodoRepositoryQuery{
                         commentCount
                 ))
                 .from(todo)
-                .join(todo.user)
                 .where(builder)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -92,7 +89,6 @@ public class TodoRepositoryQueryImpl implements TodoRepositoryQuery{
         Long total = queryFactory
                 .select(todo.count())
                 .from(todo)
-                .join(todo.user)
                 .where(builder)
                 .fetchOne();
 
