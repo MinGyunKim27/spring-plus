@@ -23,7 +23,7 @@ public class AdminAccessLoggingAspect {
     @Before("execution(* org.example.expert.domain.user.controller.UserAdminController.changeUserRole(..))")
     public void logAfterChangeUserRole(JoinPoint joinPoint) {
 
-        Long userIdFound = 0L;
+        long userIdFound = 0L;
 
         for (Object arg : joinPoint.getArgs()) {
             if (arg instanceof Long userId) {

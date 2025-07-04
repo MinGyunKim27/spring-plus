@@ -5,6 +5,7 @@ import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.example.expert.domain.comment.entity.QComment;
@@ -13,6 +14,7 @@ import org.example.expert.domain.todo.dto.response.QTodoSearchResponse;
 import org.example.expert.domain.todo.dto.response.TodoSearchResponse;
 import org.example.expert.domain.todo.entity.QTodo;
 import org.example.expert.domain.todo.entity.Todo;
+import org.example.expert.domain.user.entity.QUser;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
@@ -47,10 +49,14 @@ public class TodoRepositoryQueryImpl implements TodoRepositoryQuery{
         QTodo todo = QTodo.todo;
         QComment comment = QComment.comment;
         QManager manager = QManager.manager;
+        QUser user = QUser.user; // User 엔티티 QueryDSL Q 클래스
 
         BooleanBuilder builder = new BooleanBuilder();
-        if (search != null) builder.and(todo.title.contains(search));
-        if (nickname != null) builder.and(todo.user.nickname.contains(nickname));
+
+        if (search != null && !search.isEmpty()) {
+            builder.and(todo.title.containsIgnoreCase(search));
+        }
+
         if (startDate != null && endDate != null) {
             builder.and(todo.createdAt.between(startDate, endDate));
         } else if (startDate != null) {
@@ -59,43 +65,49 @@ public class TodoRepositoryQueryImpl implements TodoRepositoryQuery{
             builder.and(todo.createdAt.loe(endDate));
         }
 
-        // 서브쿼리: 댓글 수
-        JPQLQuery<Long> commentCount = JPAExpressions
-                .select(comment.count())
-                .from(comment)
-                .where(comment.todo.id.eq(todo.id));
+        // 닉네임 조건 (Manager → User join 서브쿼리로 처리)
+        if (nickname != null && !nickname.isEmpty()) {
+            builder.and(todo.id.in(
+                    JPAExpressions
+                            .select(manager.todo.id)
+                            .from(manager)
+                            .join(user).on(manager.user.id.eq(user.id))
+                            .where(user.nickname.containsIgnoreCase(nickname))
+            ));
+        }
 
-        // 서브쿼리: 매니저 수
-        JPQLQuery<Long> managerCount = JPAExpressions
-                .select(manager.count())
-                .from(manager)
-                .where(manager.todo.id.eq(todo.id));
-
-        // 본문 데이터 조회
         List<TodoSearchResponse> content = queryFactory
                 .select(new QTodoSearchResponse(
                         todo.id,
                         todo.title,
-                        managerCount,
-                        commentCount
+
+                        // 댓글 수
+                        JPAExpressions
+                                .select(comment.count())
+                                .from(comment)
+                                .where(comment.todo.id.eq(todo.id)),
+
+                        // 매니저 수
+                        JPAExpressions
+                                .select(manager.count())
+                                .from(manager)
+                                .where(manager.todo.id.eq(todo.id))
                 ))
                 .from(todo)
                 .where(builder)
+                .orderBy(todo.createdAt.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        // 전체 개수 조회
         Long total = queryFactory
                 .select(todo.count())
                 .from(todo)
                 .where(builder)
                 .fetchOne();
 
-        return PageableExecutionUtils.getPage(
-                content,
-                pageable,
-                () -> Optional.ofNullable(total).orElse(0L));
+        return PageableExecutionUtils.getPage(content, pageable, () -> Optional.ofNullable(total).orElse(0L));
     }
+
 
 }

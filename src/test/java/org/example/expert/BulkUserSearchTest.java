@@ -30,7 +30,7 @@ public class BulkUserSearchTest {
 
         users.add(new User("testuser@email.com", "1234", UserRole.USER, "user_abc12345"));
         for (int i = 0; i<999_999; i++){
-            String nickname = "user_" + UUID.randomUUID().toString().substring(0,8);
+            String nickname = "user_" + UUID.randomUUID();
             String email = "user@" + UUID.randomUUID();
             users.add(new User(email,"1313", UserRole.USER,nickname));
         }
